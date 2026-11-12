@@ -4,9 +4,9 @@ import { ProfileContext } from './ProfileContext'
 
 // Mientras no exista el login, el perfil se simula con este estado.
 export function ProfileProvider({ children }: { children: ReactNode }) {
-    const [profile, setProfile] = useState<Profile>('alumno')
+  const [profile, setProfile] = useState<Profile>('alumno')
 
-    return (
-        <ProfileContext value={{ profile, setProfile }}>{children}</ProfileContext>
-    )
+  return (
+    <ProfileContext value={{ profile, setProfile }}>{children}</ProfileContext>
+  )
 }
