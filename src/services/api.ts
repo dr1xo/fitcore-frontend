@@ -64,8 +64,8 @@ export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
   return apiRequest<T>(path, { signal })
 }
 
-// Consulta /health: sirve para comprobar que el back está disponible y acepta pedidos del front.
-export async function checkHealth(signal?: AbortSignal): Promise<boolean> {
-  const response = await apiGet<{ status: string }>('/health', signal)
-  return response.status === 'ok'
+// Consulta /health: si responde bien, el back está disponible y acepta pedidos del front.
+// Falla (lanza un error) si no hay conexión, si CORS lo bloquea o si responde con error.
+export async function checkHealth(signal?: AbortSignal): Promise<void> {
+  await apiGet<unknown>('/health', signal)
 }

@@ -18,7 +18,7 @@ export function ApiStatus() {
     const controller = new AbortController()
 
     checkHealth(controller.signal)
-      .then((isOk) => setState(isOk ? 'online' : 'offline'))
+      .then(() => setState('online'))
       .catch(() => {
         if (!controller.signal.aborted) setState('offline')
       })
