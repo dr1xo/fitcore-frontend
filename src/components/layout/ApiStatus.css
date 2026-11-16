@@ -1,0 +1,22 @@
+.api-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+.api-status__dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-muted);
+    border-radius: 50%;
+}
+
+.api-status--online .api-status__dot {
+    background: #16a34a;
+}
+
+.api-status--offline .api-status__dot {
+    background: #b91c1c;
+}
