@@ -161,3 +161,53 @@ Salvo `required`, ignoran los campos vacíos: para un campo obligatorio se combi
 <Button loading>Guardando</Button>
 <Spinner label="Cargando clases..." />
 ```
+
+## Variables de entorno
+
+| Variable       | Para qué sirve                              | Ejemplo                              |
+| -------------- | ------------------------------------------- | ------------------------------------ |
+| `VITE_API_URL` | URL base de la API del back (con `/api/v1`) | `https://mi-api.onrender.com/api/v1` |
+
+- En desarrollo, copiá `.env.example` como `.env`. Por defecto apunta a `http://localhost:3000/api/v1`.
+- El archivo `.env` no se sube al repositorio.
+- Vite incorpora la variable al **construir** el proyecto. Si se cambia en Netlify, hay que volver a desplegar para que tenga efecto.
+- La URL se usa desde `src/services/api.ts`, que ofrece `apiGet` y `apiRequest` para hablar con el back.
+
+## Deploy
+
+El front se publica en Netlify con deploy automático: cada cambio que llega a la rama `main` genera una nueva versión del sitio.
+
+La configuración está en `netlify.toml`: comando de construcción (`npm run build`), carpeta publicada (`dist`) y una redirección para que las rutas de la aplicación (por ejemplo `/clases`) funcionen al recargar la página.
+
+### Configurar el sitio en Netlify
+
+1. En Netlify: **Add new site → Import an existing project**, elegir GitHub y este repositorio.
+2. Rama de producción: `main`.
+3. En **Environment variables**, agregar `VITE_API_URL` con la URL del back desplegado, terminada en `/api/v1` y sin barra final.
+4. Desplegar. Netlify asigna una URL del estilo `https://nombre-del-sitio.netlify.app`.
+
+### CORS
+
+El back solo acepta pedidos del origen configurado en su variable `CORS_ORIGIN`. En el servicio donde está desplegado el back, `CORS_ORIGIN` tiene que ser **exactamente** la URL del front:
+
+- con `https://`
+- sin barra final (`https://nombre-del-sitio.netlify.app`, no `https://nombre-del-sitio.netlify.app/`)
+- sin ruta
+
+Después de cambiarla, reiniciar el back.
+
+### Comprobar que el front y el back se conectan
+
+En el pie de la página aparece el estado de la conexión con el servidor:
+
+| Mensaje                        | Significado                                          |
+| ------------------------------ | ---------------------------------------------------- |
+| `Servidor conectado`           | El front llegó a la API (`/api/v1/health`) sin error |
+| `Sin conexión con el servidor` | Hay un problema de URL, de CORS o el back está caído |
+
+Si aparece `Sin conexión con el servidor`, revisar en este orden:
+
+1. Que `VITE_API_URL` esté bien escrita y se haya vuelto a desplegar el front después de cambiarla.
+2. Que abrir `<VITE_API_URL>/health` en el navegador muestre `{"status":"ok", ...}`.
+3. Que `CORS_ORIGIN` del back sea exactamente la URL del front.
+4. En el navegador, abrir las herramientas de desarrollo (F12) y mirar la pestaña **Console**: un error `blocked by CORS policy` confirma que el problema es el paso 3.
