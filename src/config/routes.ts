@@ -49,6 +49,12 @@ export const APP_ROUTES: AppRoute[] = [
     profiles: ['administracion'],
   },
   {
+    path: '/gestion-alumnos',
+    label: 'Alumnos',
+    description: 'Listado, búsqueda y detalle de alumnos',
+    profiles: ['administracion'],
+  },
+  {
     path: '/gestion-clases',
     label: 'Gestión de clases',
     description: 'Horarios, cupos y disciplinas',
