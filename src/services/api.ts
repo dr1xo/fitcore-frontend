@@ -21,11 +21,24 @@ interface RequestOptions {
   headers?: Record<string, string>
 }
 
-// El back responde los errores como { "error": "mensaje" }.
+// El contrato dice que el back responde los errores como { "error": "mensaje" },
+// pero también se aceptan { "error": { "message": "..." } } y { "message": "..." }.
 async function getErrorMessage(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as { error?: string }
-    if (body.error) return body.error
+    const body = (await response.json()) as {
+      error?: unknown
+      message?: unknown
+    }
+    const detail = body.error ?? body.message
+    if (typeof detail === 'string') return detail
+    if (
+      detail &&
+      typeof detail === 'object' &&
+      'message' in detail &&
+      typeof detail.message === 'string'
+    ) {
+      return detail.message
+    }
   } catch {
     // La respuesta no es JSON: se usa el mensaje genérico.
   }
