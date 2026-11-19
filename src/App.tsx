@@ -3,6 +3,8 @@ import { Layout } from './components/layout/Layout'
 import { ProfileGuard } from './components/ProfileGuard'
 import { APP_ROUTES } from './config/routes'
 import { ProfileProvider } from './context/ProfileProvider'
+import { AlumnoDetallePage } from './pages/AlumnoDetallePage'
+import { AlumnosPage } from './pages/AlumnosPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SectionPage } from './pages/SectionPage'
@@ -14,7 +16,26 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
-            {APP_ROUTES.filter((route) => route.path !== '/').map((route) => (
+            <Route
+              path="/gestion-alumnos"
+              element={
+                <ProfileGuard profiles={['administracion']}>
+                  <AlumnosPage />
+                </ProfileGuard>
+              }
+            />
+            <Route
+              path="/gestion-alumnos/:id"
+              element={
+                <ProfileGuard profiles={['administracion']}>
+                  <AlumnoDetallePage />
+                </ProfileGuard>
+              }
+            />
+            {APP_ROUTES.filter(
+              (route) =>
+                route.path !== '/' && route.path !== '/gestion-alumnos',
+            ).map((route) => (
               <Route
                 key={route.path}
                 path={route.path}
