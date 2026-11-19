@@ -1,18 +1,18 @@
 .badge--pagada {
-    color: #166534;
-    background: #dcfce7;
+  color: #166534;
+  background: #dcfce7;
 }
 
 .badge--pendiente {
-    color: #92400e;
-    background: #fef3c7;
+  color: #92400e;
+  background: #fef3c7;
 }
 
 .badge--vencida {
-    color: var(--color-primary-dark);
-    background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
 }
 
 .cuotas-toolbar .field {
-    min-width: 200px;
+  min-width: 200px;
 }
