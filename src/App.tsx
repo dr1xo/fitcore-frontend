@@ -5,9 +5,14 @@ import { APP_ROUTES } from './config/routes'
 import { ProfileProvider } from './context/ProfileProvider'
 import { AlumnoDetallePage } from './pages/AlumnoDetallePage'
 import { AlumnosPage } from './pages/AlumnosPage'
+import { CuotaDetallePage } from './pages/CuotaDetallePage'
+import { CuotasPage } from './pages/CuotasPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SectionPage } from './pages/SectionPage'
+
+// Rutas que tienen su propia pantalla; el resto usa la pantalla provisoria.
+const CUSTOM_PATHS = ['/', '/gestion-alumnos', '/gestion-cuotas']
 
 function App() {
   return (
@@ -32,9 +37,24 @@ function App() {
                 </ProfileGuard>
               }
             />
+            <Route
+              path="/gestion-cuotas"
+              element={
+                <ProfileGuard profiles={['administracion']}>
+                  <CuotasPage />
+                </ProfileGuard>
+              }
+            />
+            <Route
+              path="/gestion-cuotas/:id"
+              element={
+                <ProfileGuard profiles={['administracion']}>
+                  <CuotaDetallePage />
+                </ProfileGuard>
+              }
+            />
             {APP_ROUTES.filter(
-              (route) =>
-                route.path !== '/' && route.path !== '/gestion-alumnos',
+              (route) => !CUSTOM_PATHS.includes(route.path),
             ).map((route) => (
               <Route
                 key={route.path}
