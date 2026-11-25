@@ -92,19 +92,19 @@ a {
   border-radius: 8px;
 }
 
-.profile-switcher {
+.header__session {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 14px;
 }
 
-.profile-switcher__label {
-  color: rgba(255, 255, 255, 0.7);
+.header__user {
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.profile-switcher select {
-  padding: 6px 10px;
+.header__logout {
+  padding: 6px 12px;
   font: inherit;
   color: #fff;
   cursor: pointer;
@@ -113,7 +113,11 @@ a {
   border-radius: 8px;
 }
 
-.profile-switcher select:focus-visible,
+.header__logout:hover {
+  border-color: var(--color-primary);
+}
+
+.header__logout:focus-visible,
 .header__menu-button:focus-visible,
 .sidebar__link:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -267,11 +271,11 @@ a {
     margin-right: 0;
   }
 
-  .profile-switcher {
+  .header__session {
     margin-left: auto;
   }
 
-  .profile-switcher__label {
+  .header__user {
     display: none;
   }
 

@@ -8,7 +8,7 @@ interface ProfileGuardProps {
   children: ReactNode
 }
 
-// Si el perfil simulado cambia y la sección ya no le corresponde, vuelve al inicio.
+// Si la sección no corresponde al perfil del usuario logueado, vuelve al inicio.
 export function ProfileGuard({ profiles, children }: ProfileGuardProps) {
   const { profile } = useProfile()
 
