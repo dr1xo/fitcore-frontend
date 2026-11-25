@@ -83,3 +83,14 @@ export const APP_ROUTES: AppRoute[] = [
 export function getMenuFor(profile: Profile): AppRoute[] {
   return APP_ROUTES.filter((route) => route.profiles.includes(profile))
 }
+
+// Página a la que se llega después de iniciar sesión, según el perfil.
+const HOME_BY_PROFILE: Record<Profile, string> = {
+  alumno: '/clases',
+  profesor: '/mis-clases',
+  administracion: '/',
+}
+
+export function getHomeFor(profile: Profile): string {
+  return HOME_BY_PROFILE[profile]
+}

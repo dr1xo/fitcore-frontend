@@ -1,10 +1,11 @@
-import { useContext } from 'react'
-import { ProfileContext } from '../context/ProfileContext'
+import { toProfile } from '../types/profile'
+import { useSession } from './useSession'
 
+// El perfil sale del usuario logueado. Solo se usa dentro de rutas con sesión.
 export function useProfile() {
-  const context = useContext(ProfileContext)
-  if (!context) {
-    throw new Error('useProfile debe usarse dentro de un ProfileProvider')
+  const { usuario } = useSession()
+  if (!usuario) {
+    throw new Error('useProfile requiere una sesión iniciada')
   }
-  return context
+  return { profile: toProfile(usuario.perfil) }
 }
