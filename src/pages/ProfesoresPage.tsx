@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Alert, Spinner } from '../components/ui'
+import { Alert, Pagination, SearchInput, Spinner } from '../components/ui'
 import { ApiError } from '../services/api'
-import { getProfesores } from '../services/profesores'
+import { getProfesores, type ProfesoresQuery } from '../services/profesores'
 import type { Profesor } from '../models/profesor'
 import type { PaginatedResponse } from '../types/api'
+
+const PAGE_SIZES = [5, 10, 20, 50]
+const SEARCH_DELAY_MS = 400
 
 const COLUMNS = [
   'DNI',
@@ -14,26 +17,50 @@ const COLUMNS = [
   'Especialidad',
 ]
 
-type Result = { response: PaginatedResponse<Profesor> } | { error: string }
+type Result =
+  | { key: string; response: PaginatedResponse<Profesor> }
+  | { key: string; error: string }
+
+function queryKey(query: ProfesoresQuery): string {
+  return JSON.stringify(query)
+}
 
 export function ProfesoresPage() {
+  const [searchText, setSearchText] = useState('')
+  const [especialidadText, setEspecialidadText] = useState('')
+
+  const [query, setQuery] = useState<ProfesoresQuery>({
+    page: 1,
+    limit: PAGE_SIZES[1],
+    search: '',
+    especialidad: '',
+  })
+
   const [result, setResult] = useState<Result | null>(null)
 
   useEffect(() => {
-    const controller = new AbortController()
+    const timer = window.setTimeout(() => {
+      const search = searchText.trim()
+      const especialidad = especialidadText.trim()
 
-    getProfesores(
-      {
-        page: 1,
-        limit: 10,
-        search: '',
-        especialidad: '',
-      },
-      controller.signal,
-    )
+      setQuery((current) =>
+        current.search === search && current.especialidad === especialidad
+          ? current
+          : { ...current, search, especialidad, page: 1 },
+      )
+    }, SEARCH_DELAY_MS)
+
+    return () => window.clearTimeout(timer)
+  }, [searchText, especialidadText])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const key = queryKey(query)
+
+    getProfesores(query, controller.signal)
       .then((response) => {
         if (!controller.signal.aborted) {
-          setResult({ response })
+          setResult({ key, response })
         }
       })
       .catch((error: unknown) => {
@@ -44,16 +71,26 @@ export function ProfesoresPage() {
             ? error.message
             : 'No se pudo conectar con el servidor.'
 
-        setResult({ error: message })
+        setResult({ key, error: message })
       })
 
     return () => controller.abort()
-  }, [])
+  }, [query])
 
-  const loading = result === null
-  const response = result && 'response' in result ? result.response : null
-  const error = result && 'error' in result ? result.error : null
+  const loading = result === null || result.key !== queryKey(query)
+
+  const response =
+    !loading && result && 'response' in result ? result.response : null
+
+  const error = !loading && result && 'error' in result ? result.error : null
+
   const profesores = response?.data ?? []
+  const meta = response?.meta
+  const totalPages = Math.max(1, meta?.totalPages ?? 1)
+
+  const firstIndex = meta ? (meta.page - 1) * meta.limit : 0
+  const from = profesores.length === 0 ? 0 : firstIndex + 1
+  const to = profesores.length === 0 ? 0 : firstIndex + profesores.length
 
   function renderBody() {
     if (loading) {
@@ -93,6 +130,21 @@ export function ProfesoresPage() {
       <h1 className="page-title">Profesores</h1>
       <p className="page-subtitle">Listado de profesores registrados.</p>
 
+      <div className="profesores-toolbar">
+        <SearchInput
+          value={searchText}
+          onChange={setSearchText}
+          placeholder="Nombre, apellido o DNI"
+        />
+
+        <SearchInput
+          label="Especialidad"
+          value={especialidadText}
+          onChange={setEspecialidadText}
+          placeholder="Ej. Funcional"
+        />
+      </div>
+
       {error ? (
         <Alert type="error">{error}</Alert>
       ) : (
@@ -111,6 +163,40 @@ export function ProfesoresPage() {
               <tbody>{renderBody()}</tbody>
             </table>
           </div>
+
+          {!loading && (
+            <div className="table-footer">
+              <label className="table-footer__size">
+                Registros por página
+                <select
+                  value={query.limit}
+                  onChange={(event) =>
+                    setQuery({
+                      ...query,
+                      limit: Number(event.target.value),
+                      page: 1,
+                    })
+                  }
+                >
+                  {PAGE_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <span>
+                Mostrando {from}–{to} de {meta?.total ?? 0}
+              </span>
+
+              <Pagination
+                page={query.page}
+                totalPages={totalPages}
+                onPageChange={(page) => setQuery({ ...query, page })}
+              />
+            </div>
+          )}
         </div>
       )}
     </section>
