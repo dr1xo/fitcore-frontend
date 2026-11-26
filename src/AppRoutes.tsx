@@ -14,6 +14,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SectionPage } from './pages/SectionPage'
 import { ProfesoresPage } from './pages/ProfesoresPage'
+import { ProfesorDetallePage } from './pages/ProfesorDetallePage'
 
 // Rutas que tienen su propia pantalla; el resto usa la pantalla provisoria.
 const CUSTOM_PATHS = ['/', '/gestion-alumnos', '/gestion-cuotas', '/profesores']
@@ -73,13 +74,11 @@ export function AppRoutes() {
             path="/profesores/:id"
             element={
               <ProfileGuard profiles={['administracion']}>
-                <SectionPage
-                  title="Detalle del profesor"
-                  description="Información del profesor seleccionado"
-                />
+                <ProfesorDetallePage />
               </ProfileGuard>
             }
           />
+
           {APP_ROUTES.filter((route) => !CUSTOM_PATHS.includes(route.path)).map(
             (route) => (
               <Route

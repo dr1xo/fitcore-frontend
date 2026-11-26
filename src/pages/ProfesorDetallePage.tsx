@@ -1,6 +1,6 @@
-import { useEffect, useState, type SubmitEvent  } from 'react'
+import { useEffect, useState, type SubmitEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Alert, Spinner } from '../components/ui'
+import { Alert, Button, FormField, Spinner } from '../components/ui'
 import { ApiError } from '../services/api'
 import {
   getProfesorPorId,
@@ -8,6 +8,7 @@ import {
   type ActualizarProfesorDTO,
 } from '../services/profesores'
 import type { ProfesorDetalle } from '../models/profesor'
+import './ProfesorDetallePage.css'
 
 function obtenerDatos(profesor: ProfesorDetalle): ActualizarProfesorDTO {
   return {
@@ -67,9 +68,7 @@ export function ProfesorDetallePage() {
     campo: keyof ActualizarProfesorDTO,
     valor: string | number,
   ) {
-    setDatos((actual) =>
-      actual ? { ...actual, [campo]: valor } : actual,
-    )
+    setDatos((actual) => (actual ? { ...actual, [campo]: valor } : actual))
   }
 
   function iniciarEdicion() {
@@ -123,12 +122,16 @@ export function ProfesorDetallePage() {
         Consultá y editá los datos del profesor seleccionado.
       </p>
 
-      <button
-        type="button"
-        onClick={() => navigate('/profesores')}
-      >
-        Volver al listado
-      </button>
+      <div className="profesor-detalle-toolbar">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate('/profesores')}
+          disabled={guardando}
+        >
+          Volver al listado
+        </Button>
+      </div>
 
       {error && <Alert type="error">{error}</Alert>}
 
@@ -136,74 +139,65 @@ export function ProfesorDetallePage() {
         <Spinner />
       ) : profesor && datos ? (
         <>
-          <form onSubmit={guardar}>
-            <fieldset disabled={!editando || guardando}>
+          <form className="profesor-detalle-card" onSubmit={guardar}>
+            <fieldset
+              className="profesor-detalle-fieldset"
+              disabled={!editando || guardando}
+            >
               <legend>Datos del profesor</legend>
 
-              <label>
-                ID
-                <input
+              <div className="profesor-detalle-grid">
+                <FormField
+                  name="id"
+                  label="ID"
                   type="number"
                   value={profesor.id}
                   disabled
                 />
-              </label>
 
-              <label>
-                ID de usuario
-                <input
+                <FormField
+                  name="usuarioId"
+                  label="ID de usuario"
                   type="number"
                   value={datos.usuarioId}
                   min={1}
                   required
                   onChange={(event) =>
-                    cambiarCampo(
-                      'usuarioId',
-                      Number(event.target.value),
-                    )
+                    cambiarCampo('usuarioId', Number(event.target.value))
                   }
                 />
-              </label>
 
-              <label>
-                DNI
-                <input
-                  type="text"
+                <FormField
+                  name="dni"
+                  label="DNI"
                   value={datos.dni}
                   required
-                  onChange={(event) =>
-                    cambiarCampo('dni', event.target.value)
-                  }
+                  onChange={(event) => cambiarCampo('dni', event.target.value)}
                 />
-              </label>
 
-              <label>
-                Nombre
-                <input
-                  type="text"
+                <FormField
+                  name="nombre"
+                  label="Nombre"
                   value={datos.nombre}
                   required
                   onChange={(event) =>
                     cambiarCampo('nombre', event.target.value)
                   }
                 />
-              </label>
 
-              <label>
-                Apellido
-                <input
-                  type="text"
+                <FormField
+                  name="apellido"
+                  label="Apellido"
                   value={datos.apellido}
                   required
                   onChange={(event) =>
                     cambiarCampo('apellido', event.target.value)
                   }
                 />
-              </label>
 
-              <label>
-                Email
-                <input
+                <FormField
+                  name="email"
+                  label="Email"
                   type="email"
                   value={datos.email}
                   required
@@ -211,64 +205,74 @@ export function ProfesorDetallePage() {
                     cambiarCampo('email', event.target.value)
                   }
                 />
-              </label>
 
-              <label>
-                Teléfono
-                <input
+                <FormField
+                  name="telefono"
+                  label="Teléfono"
                   type="tel"
                   value={datos.telefono}
                   onChange={(event) =>
                     cambiarCampo('telefono', event.target.value)
                   }
                 />
-              </label>
 
-              <label>
-                Especialidad
-                <input
-                  type="text"
+                <FormField
+                  name="especialidad"
+                  label="Especialidad"
                   value={datos.especialidad}
                   required
                   onChange={(event) =>
                     cambiarCampo('especialidad', event.target.value)
                   }
                 />
-              </label>
+              </div>
             </fieldset>
 
-            {editando ? (
-              <div>
-                <button type="submit" disabled={guardando}>
-                  {guardando ? 'Guardando...' : 'Guardar'}
-                </button>
+            <div className="profesor-detalle-actions">
+              {editando ? (
+                <>
+                  <Button key="guardar" type="submit" loading={guardando}>
+                    {guardando ? 'Guardando...' : 'Guardar'}
+                  </Button>
 
-                <button
+                  <Button
+                    key="cancelar"
+                    type="button"
+                    variant="secondary"
+                    disabled={guardando}
+                    onClick={cancelarEdicion}
+                  >
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  key="editar"
                   type="button"
-                  disabled={guardando}
-                  onClick={cancelarEdicion}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    iniciarEdicion()
+                  }}
                 >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <button type="button" onClick={iniciarEdicion}>
-                Editar
-              </button>
-            )}
+                  Editar
+                </Button>
+              )}
+            </div>
           </form>
 
-          <h2>Clases asignadas</h2>
+          <section className="profesor-detalle-card">
+            <h2>Clases asignadas</h2>
 
-          {profesor.clases.length === 0 ? (
-            <p>No tiene clases asignadas.</p>
-          ) : (
-            <ul>
-              {profesor.clases.map((clase) => (
-                <li key={clase.id}>{clase.nombre}</li>
-              ))}
-            </ul>
-          )}
+            {profesor.clases.length === 0 ? (
+              <p>No tiene clases asignadas.</p>
+            ) : (
+              <ul className="profesor-detalle-clases">
+                {profesor.clases.map((clase) => (
+                  <li key={clase.id}>{clase.nombre}</li>
+                ))}
+              </ul>
+            )}
+          </section>
         </>
       ) : null}
     </section>

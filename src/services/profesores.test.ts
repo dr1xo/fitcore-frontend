@@ -128,10 +128,7 @@ describe('getProfesorPorId', () => {
   it('consulta el detalle de un profesor por ID', async () => {
     await getProfesorPorId(7)
 
-    expect(apiGet).toHaveBeenCalledWith(
-      '/profesores/7',
-      undefined,
-    )
+    expect(apiGet).toHaveBeenCalledWith('/profesores/7', undefined)
   })
 
   it('permite cancelar la petición del detalle', async () => {
@@ -139,10 +136,7 @@ describe('getProfesorPorId', () => {
 
     await getProfesorPorId(7, controller.signal)
 
-    expect(apiGet).toHaveBeenCalledWith(
-      '/profesores/7',
-      controller.signal,
-    )
+    expect(apiGet).toHaveBeenCalledWith('/profesores/7', controller.signal)
   })
 })
 
@@ -164,12 +158,9 @@ describe('actualizarProfesor', () => {
   it('actualiza los datos de un profesor mediante PUT', async () => {
     await actualizarProfesor(7, datos)
 
-    expect(apiRequest).toHaveBeenCalledWith(
-      '/profesores/7',
-      {
-        method: 'PUT',
-        body: datos,
-      },
-    )
+    expect(apiRequest).toHaveBeenCalledWith('/profesores/7', {
+      method: 'PUT',
+      body: datos,
+    })
   })
 })

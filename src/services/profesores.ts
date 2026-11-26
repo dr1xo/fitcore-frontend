@@ -35,21 +35,15 @@ export function getProfesorPorId(
   id: number,
   signal?: AbortSignal,
 ): Promise<{ data: ProfesorDetalle }> {
-  return apiGet<{ data: ProfesorDetalle }>(
-    `/profesores/${id}`,
-    signal,
-  )
+  return apiGet<{ data: ProfesorDetalle }>(`/profesores/${id}`, signal)
 }
 
 export function actualizarProfesor(
   id: number,
   datos: ActualizarProfesorDTO,
 ): Promise<{ data: Profesor }> {
-  return apiRequest<{ data: Profesor }>(
-    `/profesores/${id}`,
-    {
-      method: 'PUT',
-      body: datos,
-    },
-  )
+  return apiRequest<{ data: Profesor }>(`/profesores/${id}`, {
+    method: 'PUT',
+    body: datos,
+  })
 }
