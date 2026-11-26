@@ -1,6 +1,6 @@
-import type { Profesor } from '../models/profesor'
+import type { Profesor, ProfesorDetalle } from '../models/profesor'
 import type { PaginatedResponse } from '../types/api'
-import { apiGet } from './api'
+import { apiGet, apiRequest } from './api'
 
 export interface ProfesoresQuery {
   page: number
@@ -27,4 +27,23 @@ export function getProfesores(
   }
 
   return apiGet<PaginatedResponse<Profesor>>(`/profesores?${params}`, signal)
+}
+
+export type ActualizarProfesorDTO = Omit<Profesor, 'id'>
+
+export function getProfesorPorId(
+  id: number,
+  signal?: AbortSignal,
+): Promise<{ data: ProfesorDetalle }> {
+  return apiGet<{ data: ProfesorDetalle }>(`/profesores/${id}`, signal)
+}
+
+export function actualizarProfesor(
+  id: number,
+  datos: ActualizarProfesorDTO,
+): Promise<{ data: Profesor }> {
+  return apiRequest<{ data: Profesor }>(`/profesores/${id}`, {
+    method: 'PUT',
+    body: datos,
+  })
 }

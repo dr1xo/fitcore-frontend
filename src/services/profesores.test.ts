@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiGet } from './api'
-import { getProfesores } from '../services/profesores'
+import { apiGet, apiRequest } from './api'
+import {
+  getProfesores,
+  getProfesorPorId,
+  actualizarProfesor,
+} from '../services/profesores'
 
 vi.mock('./api', () => ({
   apiGet: vi.fn(),
+  apiRequest: vi.fn(),
 }))
 
 describe('getProfesores', () => {
@@ -112,5 +117,50 @@ describe('getProfesores', () => {
       '/profesores?page=1&limit=10',
       controller.signal,
     )
+  })
+})
+
+describe('getProfesorPorId', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('consulta el detalle de un profesor por ID', async () => {
+    await getProfesorPorId(7)
+
+    expect(apiGet).toHaveBeenCalledWith('/profesores/7', undefined)
+  })
+
+  it('permite cancelar la petición del detalle', async () => {
+    const controller = new AbortController()
+
+    await getProfesorPorId(7, controller.signal)
+
+    expect(apiGet).toHaveBeenCalledWith('/profesores/7', controller.signal)
+  })
+})
+
+describe('actualizarProfesor', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  const datos = {
+    usuarioId: 107,
+    dni: '29765432',
+    nombre: 'Lucas',
+    apellido: 'Romero',
+    email: 'lucas@example.com',
+    telefono: '2914567890',
+    especialidad: 'Funcional',
+  }
+
+  it('actualiza los datos de un profesor mediante PUT', async () => {
+    await actualizarProfesor(7, datos)
+
+    expect(apiRequest).toHaveBeenCalledWith('/profesores/7', {
+      method: 'PUT',
+      body: datos,
+    })
   })
 })
