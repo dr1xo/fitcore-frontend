@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
 import { getProfesores } from '../services/profesores'
 import { ProfesoresPage } from './ProfesoresPage'
 import type { Profesor } from '../models/profesor'
@@ -43,10 +43,19 @@ const respuestaPaginada = {
   },
 }
 
+function DetallePrueba() {
+  const { id } = useParams()
+
+  return <h1>Detalle del profesor {id}</h1>
+}
+
 function renderPage() {
   return render(
-    <MemoryRouter>
-      <ProfesoresPage />
+    <MemoryRouter initialEntries={['/profesores']}>
+      <Routes>
+        <Route path="/profesores" element={<ProfesoresPage />} />
+        <Route path="/profesores/:id" element={<DetallePrueba />} />
+      </Routes>
     </MemoryRouter>,
   )
 }
@@ -233,5 +242,66 @@ describe('ProfesoresPage', () => {
         expect.any(AbortSignal),
       )
     })
+  })
+  it('abre el detalle al hacer clic en un profesor', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    await user.click(fila)
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('permite abrir el detalle utilizando Enter', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    fila.focus()
+    await user.keyboard('{Enter}')
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('permite abrir el detalle utilizando espacio', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    fila.focus()
+    await user.keyboard(' ')
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
   })
 })
