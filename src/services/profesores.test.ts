@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiGet } from './api'
-import { getProfesores } from './profesores'
+import { getProfesores } from '../services/profesores'
 
 vi.mock('./api', () => ({
   apiGet: vi.fn(),
