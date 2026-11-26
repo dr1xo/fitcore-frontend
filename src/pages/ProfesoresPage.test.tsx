@@ -1,0 +1,307 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
+import { getProfesores } from '../services/profesores'
+import { ProfesoresPage } from './ProfesoresPage'
+import type { Profesor } from '../models/profesor'
+import userEvent from '@testing-library/user-event'
+
+vi.mock('../services/profesores', () => ({
+  getProfesores: vi.fn(),
+}))
+
+const profesores: Profesor[] = [
+  {
+    id: 7,
+    usuarioId: 107,
+    dni: '29765432',
+    nombre: 'Lucas',
+    apellido: 'Romero',
+    email: 'lucas@example.com',
+    telefono: '2914567890',
+    especialidad: 'Funcional',
+  },
+  {
+    id: 8,
+    usuarioId: 108,
+    dni: '31234567',
+    nombre: 'Martina',
+    apellido: 'Gomez',
+    email: 'martina@example.com',
+    telefono: '2911234567',
+    especialidad: 'Pilates',
+  },
+]
+
+const respuestaPaginada = {
+  data: profesores,
+  meta: {
+    page: 1,
+    limit: 10,
+    total: 30,
+    totalPages: 3,
+  },
+}
+
+function DetallePrueba() {
+  const { id } = useParams()
+
+  return <h1>Detalle del profesor {id}</h1>
+}
+
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/profesores']}>
+      <Routes>
+        <Route path="/profesores" element={<ProfesoresPage />} />
+        <Route path="/profesores/:id" element={<DetallePrueba />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+describe('ProfesoresPage', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('muestra un indicador mientras carga los profesores', () => {
+    vi.mocked(getProfesores).mockImplementation(() => new Promise(() => {}))
+
+    renderPage()
+
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando')
+  })
+
+  it('muestra los profesores recibidos del servicio', async () => {
+    vi.mocked(getProfesores).mockResolvedValue({
+      data: profesores,
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 2,
+        totalPages: 1,
+      },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('Lucas')).toBeInTheDocument()
+    expect(screen.getByText('Romero')).toBeInTheDocument()
+    expect(screen.getByText('29765432')).toBeInTheDocument()
+    expect(screen.getByText('Funcional')).toBeInTheDocument()
+
+    expect(screen.getByText('Martina')).toBeInTheDocument()
+    expect(screen.getByText('Gomez')).toBeInTheDocument()
+    expect(screen.getByText('Pilates')).toBeInTheDocument()
+  })
+
+  it('muestra un mensaje cuando no hay profesores', async () => {
+    vi.mocked(getProfesores).mockResolvedValue({
+      data: [],
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      },
+    })
+
+    renderPage()
+
+    expect(
+      await screen.findByText(/no se encontraron profesores/i),
+    ).toBeInTheDocument()
+  })
+
+  it('muestra un mensaje cuando falla la petición', async () => {
+    vi.mocked(getProfesores).mockRejectedValue(new Error('Error de conexión'))
+
+    renderPage()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo conectar con el servidor.',
+    )
+  })
+
+  it('permite avanzar a la siguiente página', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Siguiente' }))
+
+    expect(getProfesores).toHaveBeenLastCalledWith(
+      {
+        page: 2,
+        limit: 10,
+        search: '',
+        especialidad: '',
+      },
+      expect.any(AbortSignal),
+    )
+  })
+
+  it('permite cambiar la cantidad de registros por página', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.selectOptions(
+      await screen.findByLabelText('Registros por página'),
+      '20',
+    )
+
+    expect(getProfesores).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        limit: 20,
+        search: '',
+        especialidad: '',
+      },
+      expect.any(AbortSignal),
+    )
+  })
+
+  it('permite buscar profesores por nombre', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', { name: 'Buscar' }),
+      'Lucas',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: 'Lucas',
+          especialidad: '',
+        },
+        expect.any(AbortSignal),
+      )
+    })
+  })
+
+  it('permite buscar profesores por DNI', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', { name: 'Buscar' }),
+      '29765432',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: '29765432',
+          especialidad: '',
+        },
+        expect.any(AbortSignal),
+      )
+    })
+  })
+
+  it('permite filtrar profesores por especialidad', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', {
+        name: 'Especialidad',
+      }),
+      'Funcional',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: '',
+          especialidad: 'Funcional',
+        },
+        expect.any(AbortSignal),
+      )
+    })
+  })
+  it('abre el detalle al hacer clic en un profesor', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    await user.click(fila)
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('permite abrir el detalle utilizando Enter', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    fila.focus()
+    await user.keyboard('{Enter}')
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('permite abrir el detalle utilizando espacio', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    const fila = await screen.findByRole('row', {
+      name: /Romero Lucas/i,
+    })
+
+    fila.focus()
+    await user.keyboard(' ')
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Detalle del profesor 7',
+      }),
+    ).toBeInTheDocument()
+  })
+})
