@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { getProfesores } from '../services/profesores'
 import { ProfesoresPage } from './ProfesoresPage'
 import type { Profesor } from '../models/profesor'
+import userEvent from '@testing-library/user-event'
 
 vi.mock('../services/profesores', () => ({
   getProfesores: vi.fn(),
@@ -31,6 +32,16 @@ const profesores: Profesor[] = [
     especialidad: 'Pilates',
   },
 ]
+
+const respuestaPaginada = {
+  data: profesores,
+  meta: {
+    page: 1,
+    limit: 10,
+    total: 30,
+    totalPages: 3,
+  },
+}
 
 function renderPage() {
   return render(
@@ -102,5 +113,125 @@ describe('ProfesoresPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No se pudo conectar con el servidor.',
     )
+  })
+
+  it('permite avanzar a la siguiente página', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Siguiente' }))
+
+    expect(getProfesores).toHaveBeenLastCalledWith(
+      {
+        page: 2,
+        limit: 10,
+        search: '',
+        especialidad: '',
+      },
+      expect.any(AbortSignal),
+    )
+  })
+
+  it('permite cambiar la cantidad de registros por página', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.selectOptions(
+      await screen.findByLabelText('Registros por página'),
+      '20',
+    )
+
+    expect(getProfesores).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        limit: 20,
+        search: '',
+        especialidad: '',
+      },
+      expect.any(AbortSignal),
+    )
+  })
+
+  it('permite buscar profesores por nombre', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', { name: 'Buscar' }),
+      'Lucas',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: 'Lucas',
+          especialidad: '',
+        },
+        expect.any(AbortSignal),
+      )
+    })
+  })
+
+  it('permite buscar profesores por DNI', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', { name: 'Buscar' }),
+      '29765432',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: '29765432',
+          especialidad: '',
+        },
+        expect.any(AbortSignal),
+      )
+    })
+  })
+
+  it('permite filtrar profesores por especialidad', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(getProfesores).mockResolvedValue(respuestaPaginada)
+
+    renderPage()
+
+    await user.type(
+      await screen.findByRole('searchbox', {
+        name: 'Especialidad',
+      }),
+      'Funcional',
+    )
+
+    await waitFor(() => {
+      expect(getProfesores).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          search: '',
+          especialidad: 'Funcional',
+        },
+        expect.any(AbortSignal),
+      )
+    })
   })
 })
