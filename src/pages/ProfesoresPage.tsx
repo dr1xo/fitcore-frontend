@@ -5,6 +5,7 @@ import { ApiError } from '../services/api'
 import { getProfesores, type ProfesoresQuery } from '../services/profesores'
 import type { Profesor } from '../models/profesor'
 import type { PaginatedResponse } from '../types/api'
+import './ProfesoresPage.css'
 
 const PAGE_SIZES = [5, 10, 20, 50]
 const SEARCH_DELAY_MS = 400
@@ -142,7 +143,10 @@ export function ProfesoresPage() {
   return (
     <section>
       <h1 className="page-title">Profesores</h1>
-      <p className="page-subtitle">Listado de profesores registrados.</p>
+      <p className="page-subtitle">
+        Buscá por nombre, DNI o especialidad y hacé click en un profesor para
+        ver su detalle.
+      </p>
 
       <div className="profesores-toolbar">
         <SearchInput

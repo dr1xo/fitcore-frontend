@@ -13,9 +13,10 @@ import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SectionPage } from './pages/SectionPage'
+import { ProfesoresPage } from './pages/ProfesoresPage'
 
 // Rutas que tienen su propia pantalla; el resto usa la pantalla provisoria.
-const CUSTOM_PATHS = ['/', '/gestion-alumnos', '/gestion-cuotas']
+const CUSTOM_PATHS = ['/', '/gestion-alumnos', '/gestion-cuotas', '/profesores']
 
 // Login y registro quedan fuera del Layout; el resto de la aplicación pide sesión.
 export function AppRoutes() {
@@ -57,6 +58,25 @@ export function AppRoutes() {
             element={
               <ProfileGuard profiles={['administracion']}>
                 <CuotaDetallePage />
+              </ProfileGuard>
+            }
+          />
+          <Route
+            path="/profesores"
+            element={
+              <ProfileGuard profiles={['administracion']}>
+                <ProfesoresPage />
+              </ProfileGuard>
+            }
+          />
+          <Route
+            path="/profesores/:id"
+            element={
+              <ProfileGuard profiles={['administracion']}>
+                <SectionPage
+                  title="Detalle del profesor"
+                  description="Información del profesor seleccionado"
+                />
               </ProfileGuard>
             }
           />
