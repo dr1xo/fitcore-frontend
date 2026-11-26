@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Alert, Pagination, SearchInput, Spinner } from '../components/ui'
 import { ApiError } from '../services/api'
 import { getProfesores, type ProfesoresQuery } from '../services/profesores'
@@ -26,6 +27,8 @@ function queryKey(query: ProfesoresQuery): string {
 }
 
 export function ProfesoresPage() {
+  const navigate = useNavigate()
+
   const [searchText, setSearchText] = useState('')
   const [especialidadText, setEspecialidadText] = useState('')
 
@@ -114,7 +117,18 @@ export function ProfesoresPage() {
     }
 
     return profesores.map((profesor) => (
-      <tr key={profesor.id}>
+      <tr
+        key={profesor.id}
+        className="profesores-row"
+        tabIndex={0}
+        onClick={() => navigate(`/profesores/${profesor.id}`)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            navigate(`/profesores/${profesor.id}`)
+          }
+        }}
+      >
         <td>{profesor.dni}</td>
         <td>{profesor.apellido}</td>
         <td>{profesor.nombre}</td>
