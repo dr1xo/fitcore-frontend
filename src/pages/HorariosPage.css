@@ -1,0 +1,21 @@
+.horarios-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.horarios-toolbar .search,
+.horarios-toolbar .field {
+  flex: 1 1 220px;
+}
+
+.horarios-row {
+  cursor: pointer;
+}
+
+.horarios-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
