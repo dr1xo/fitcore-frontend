@@ -1,6 +1,6 @@
 import type { Alumno, AlumnoEstado } from '../types/alumno'
 import type { ItemResponse, PaginatedResponse } from '../types/api'
-import { apiGet } from './api'
+import { apiGet, apiRequest } from './api'
 
 export interface AlumnosQuery {
   page: number
@@ -8,6 +8,11 @@ export interface AlumnosQuery {
   search: string
   estado: '' | AlumnoEstado // '' = todos
 }
+
+export type ActualizarAlumnoDTO = Omit<
+  Alumno,
+  'id' | 'fechaAlta'
+>
 
 // GET /alumnos?page=1&limit=10&search=gomez&estado=activo
 export function getAlumnos(
@@ -34,4 +39,15 @@ export async function getAlumno(
     signal,
   )
   return response.data
+}
+
+// PUT /alumnos/:id
+export function actualizarAlumno(
+  id: number,
+  datos: ActualizarAlumnoDTO,
+): Promise<ItemResponse<Alumno>> {
+  return apiRequest<ItemResponse<Alumno>>(`/alumnos/${id}`, {
+    method: 'PUT',
+    body: datos,
+  })
 }
