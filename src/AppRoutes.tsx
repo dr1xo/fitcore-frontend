@@ -16,6 +16,7 @@ import { SectionPage } from './pages/SectionPage'
 import { ProfesoresPage } from './pages/ProfesoresPage'
 import { ProfesorDetallePage } from './pages/ProfesorDetallePage'
 import { HorariosPage } from './pages/HorariosPage'
+import { HorarioDetallePage } from './pages/HorarioDetallePage'
 
 // Rutas que tienen su propia pantalla; el resto usa la pantalla provisoria.
 const CUSTOM_PATHS = [
@@ -98,10 +99,7 @@ export function AppRoutes() {
             path="/horarios/:id"
             element={
               <ProfileGuard profiles={['administracion']}>
-                <SectionPage
-                  title="Detalle de horario"
-                  description="Detalle del horario seleccionado"
-                />
+                <HorarioDetallePage />
               </ProfileGuard>
             }
           />

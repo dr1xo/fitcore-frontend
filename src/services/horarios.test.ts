@@ -2,10 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   getHorarios,
   getClasesParaHorarios,
+  getHorarioById,
+  updateHorario,
   type HorariosQuery,
+  type UpdateHorarioDTO,
 } from './horarios'
+import type { Horario } from '../models/horario'
 import type { Clase } from '../models/clase'
-import { apiRequest } from './api'
+import { apiRequest, ApiError } from './api'
 import { loadSession } from './session'
 
 vi.mock('./api', async (importOriginal) => {
@@ -302,5 +306,141 @@ describe('getClasesParaHorarios', () => {
     vi.mocked(apiRequest).mockRejectedValue(new Error('Error de conexión'))
 
     await expect(getClasesParaHorarios()).rejects.toThrow('Error de conexión')
+  })
+})
+
+describe('getHorarioById', () => {
+  const horario: Horario = {
+    id: 1,
+    claseId: 3,
+    diaSemana: 'lunes',
+    horaInicio: '09:00',
+    horaFin: '10:00',
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+
+    vi.mocked(loadSession).mockReturnValue({
+      token: 'token-prueba',
+    } as NonNullable<ReturnType<typeof loadSession>>)
+
+    vi.mocked(apiRequest).mockResolvedValue(horario)
+  })
+
+  it('obtiene un horario por su ID', async () => {
+    const resultado = await getHorarioById(1)
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/horarios/1',
+      expect.objectContaining({
+        headers: {
+          Authorization: 'Bearer token-prueba',
+        },
+      }),
+    )
+
+    expect(resultado).toEqual(horario)
+  })
+
+  it('envía la señal de cancelación', async () => {
+    const controller = new AbortController()
+
+    await getHorarioById(1, controller.signal)
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/horarios/1',
+      expect.objectContaining({
+        signal: controller.signal,
+      }),
+    )
+  })
+
+  it('rechaza la consulta si no existe una sesión', async () => {
+    vi.mocked(loadSession).mockReturnValue(null)
+
+    await expect(getHorarioById(1)).rejects.toThrow('No hay sesión iniciada')
+
+    expect(apiRequest).not.toHaveBeenCalled()
+  })
+
+  it('propaga el error cuando el horario no existe', async () => {
+    const error = new ApiError('Horario no encontrado', 404)
+
+    vi.mocked(apiRequest).mockRejectedValue(error)
+
+    await expect(getHorarioById(99)).rejects.toBe(error)
+  })
+})
+
+describe('updateHorario', () => {
+  const datos: UpdateHorarioDTO = {
+    diaSemana: 'martes',
+    horaInicio: '10:00',
+    horaFin: '11:00',
+  }
+
+  const horarioActualizado: Horario = {
+    id: 1,
+    claseId: 3,
+    ...datos,
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+
+    vi.mocked(loadSession).mockReturnValue({
+      token: 'token-prueba',
+    } as NonNullable<ReturnType<typeof loadSession>>)
+
+    vi.mocked(apiRequest).mockResolvedValue(horarioActualizado)
+  })
+
+  it('actualiza un horario mediante PUT', async () => {
+    const resultado = await updateHorario(1, datos)
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/horarios/1',
+      expect.objectContaining({
+        method: 'PUT',
+        body: datos,
+        headers: {
+          Authorization: 'Bearer token-prueba',
+        },
+      }),
+    )
+
+    expect(resultado).toEqual(horarioActualizado)
+  })
+
+  it('envía la señal de cancelación', async () => {
+    const controller = new AbortController()
+
+    await updateHorario(1, datos, controller.signal)
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/horarios/1',
+      expect.objectContaining({
+        signal: controller.signal,
+      }),
+    )
+  })
+
+  it('rechaza la actualización si no existe una sesión', async () => {
+    vi.mocked(loadSession).mockReturnValue(null)
+
+    await expect(updateHorario(1, datos)).rejects.toThrow(
+      'No hay sesión iniciada',
+    )
+
+    expect(apiRequest).not.toHaveBeenCalled()
+  })
+
+  it('propaga los errores de actualización de la API', async () => {
+    const error = new ApiError('Horario inválido', 400)
+
+    vi.mocked(apiRequest).mockRejectedValue(error)
+
+    await expect(updateHorario(1, datos)).rejects.toBe(error)
   })
 })
