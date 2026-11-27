@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Alert,
-  Pagination,
-  SearchInput,
-  SelectField,
-  Spinner,
-} from '../components/ui'
+import { Alert, Pagination, SelectField, Spinner } from '../components/ui'
 import { ApiError } from '../services/api'
-import { getHorarios, type HorariosQuery } from '../services/horarios'
+import {
+  getHorarios,
+  getClasesParaHorarios,
+  type HorariosQuery,
+} from '../services/horarios'
+import type { Clase } from '../models/clase'
 import type { Horario, DiaSemana } from '../models/horario'
 import type { PaginatedResponse } from '../types/api'
 import './HorariosPage.css'
 
 const PAGE_SIZES = [5, 10, 20, 50]
-const SEARCH_DELAY_MS = 400
 
-const COLUMNS = ['ID', 'Clase', 'Día', 'Hora de inicio', 'Hora de fin']
+const COLUMNS = ['Clase', 'Profesor', 'Día', 'Hora de inicio', 'Hora de fin']
 
 const DIAS = [
   { value: 'lunes', label: 'Lunes' },
@@ -39,8 +37,9 @@ function queryKey(query: HorariosQuery): string {
 export function HorariosPage() {
   const navigate = useNavigate()
 
-  const [claseText, setClaseText] = useState('')
-  const [profesorText, setProfesorText] = useState('')
+  const [clases, setClases] = useState<Clase[]>([])
+  const [loadingClases, setLoadingClases] = useState(true)
+  const [errorClases, setErrorClases] = useState<string | null>(null)
 
   const [query, setQuery] = useState<HorariosQuery>({
     page: 1,
@@ -53,24 +52,31 @@ export function HorariosPage() {
   const [result, setResult] = useState<Result | null>(null)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const claseId = claseText.trim()
-      const profesorId = profesorText.trim()
+    const controller = new AbortController()
 
-      setQuery((current) =>
-        current.claseId === claseId && current.profesorId === profesorId
-          ? current
-          : {
-              ...current,
-              claseId,
-              profesorId,
-              page: 1,
-            },
-      )
-    }, SEARCH_DELAY_MS)
+    getClasesParaHorarios(controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setClases(data)
+        }
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return
 
-    return () => window.clearTimeout(timer)
-  }, [claseText, profesorText])
+        setErrorClases(
+          error instanceof ApiError
+            ? error.message
+            : 'No se pudieron obtener las clases.',
+        )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoadingClases(false)
+        }
+      })
+
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -113,6 +119,24 @@ export function HorariosPage() {
 
   const to = horarios.length === 0 ? 0 : firstIndex + horarios.length
 
+  const clasesPorId = new Map(clases.map((clase) => [clase.id, clase]))
+
+  const opcionesClases = clases.map((clase) => ({
+    value: String(clase.id),
+    label: clase.nombre,
+  }))
+
+  const profesoresPorId = new Map(
+    clases.map((clase) => [clase.profesor.id, clase.profesor]),
+  )
+
+  const opcionesProfesores = Array.from(profesoresPorId.values()).map(
+    (profesor) => ({
+      value: String(profesor.id),
+      label: `${profesor.nombre} ${profesor.apellido}`,
+    }),
+  )
+
   function renderBody() {
     if (loading) {
       return (
@@ -134,29 +158,43 @@ export function HorariosPage() {
       )
     }
 
-    return horarios.map((horario) => (
-      <tr
-        key={horario.id}
-        className="horarios-row"
-        tabIndex={0}
-        onClick={() => navigate(`/horarios/${horario.id}`)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            navigate(`/horarios/${horario.id}`)
-          }
-        }}
-      >
-        <td>{horario.id}</td>
-        <td>{horario.claseId}</td>
-        <td>
-          {DIAS.find((dia) => dia.value === horario.diaSemana)?.label ??
-            horario.diaSemana}
-        </td>
-        <td>{horario.horaInicio}</td>
-        <td>{horario.horaFin}</td>
-      </tr>
-    ))
+    return horarios.map((horario) => {
+      const clase = clasesPorId.get(horario.claseId)
+
+      return (
+        <tr
+          key={horario.id}
+          className="horarios-row"
+          tabIndex={0}
+          onClick={() => navigate(`/horarios/${horario.id}`)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              navigate(`/horarios/${horario.id}`)
+            }
+          }}
+        >
+          <td>
+            {clase?.nombre ??
+              (loadingClases ? 'Cargando...' : 'Clase no disponible')}
+          </td>
+
+          <td>
+            {clase
+              ? `${clase.profesor.nombre} ${clase.profesor.apellido}`
+              : '—'}
+          </td>
+
+          <td>
+            {DIAS.find((dia) => dia.value === horario.diaSemana)?.label ??
+              horario.diaSemana}
+          </td>
+
+          <td>{horario.horaInicio}</td>
+          <td>{horario.horaFin}</td>
+        </tr>
+      )
+    })
   }
 
   return (
@@ -169,11 +207,19 @@ export function HorariosPage() {
       </p>
 
       <div className="horarios-toolbar">
-        <SearchInput
+        <SelectField
+          name="claseId"
           label="Clase"
-          value={claseText}
-          onChange={setClaseText}
-          placeholder="ID de la clase"
+          options={opcionesClases}
+          placeholder="Todas las clases"
+          value={query.claseId}
+          onChange={(event) =>
+            setQuery((current) => ({
+              ...current,
+              claseId: event.target.value,
+              page: 1,
+            }))
+          }
         />
 
         <SelectField
@@ -191,13 +237,23 @@ export function HorariosPage() {
           }
         />
 
-        <SearchInput
+        <SelectField
+          name="profesorId"
           label="Profesor"
-          value={profesorText}
-          onChange={setProfesorText}
-          placeholder="ID del profesor"
+          options={opcionesProfesores}
+          placeholder="Todos los profesores"
+          value={query.profesorId}
+          onChange={(event) =>
+            setQuery((current) => ({
+              ...current,
+              profesorId: event.target.value,
+              page: 1,
+            }))
+          }
         />
       </div>
+
+      {errorClases && <Alert type="error">{errorClases}</Alert>}
 
       {error ? (
         <Alert type="error">{error}</Alert>
