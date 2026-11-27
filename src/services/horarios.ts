@@ -12,6 +12,12 @@ export interface HorariosQuery {
   profesorId: string
 }
 
+export interface UpdateHorarioDTO {
+  diaSemana: DiaSemana
+  horaInicio: string
+  horaFin: string
+}
+
 export function getHorarios(
   query: HorariosQuery,
   signal?: AbortSignal,
@@ -82,4 +88,43 @@ export async function getClasesParaHorarios(
   } while (page <= totalPages)
 
   return clases
+}
+
+export function getHorarioById(
+  id: number,
+  signal?: AbortSignal,
+): Promise<Horario> {
+  const session = loadSession()
+
+  if (!session) {
+    return Promise.reject(new ApiError('No hay sesión iniciada', 401))
+  }
+
+  return apiRequest<Horario>(`/horarios/${id}`, {
+    signal,
+    headers: {
+      Authorization: `Bearer ${session.token}`,
+    },
+  })
+}
+
+export function updateHorario(
+  id: number,
+  datos: UpdateHorarioDTO,
+  signal?: AbortSignal,
+): Promise<Horario> {
+  const session = loadSession()
+
+  if (!session) {
+    return Promise.reject(new ApiError('No hay sesión iniciada', 401))
+  }
+
+  return apiRequest<Horario>(`/horarios/${id}`, {
+    method: 'PUT',
+    body: datos,
+    signal,
+    headers: {
+      Authorization: `Bearer ${session.token}`,
+    },
+  })
 }
