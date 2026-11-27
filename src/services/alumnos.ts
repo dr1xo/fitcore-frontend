@@ -9,10 +9,6 @@ export interface AlumnosQuery {
   estado: '' | AlumnoEstado // '' = todos
 }
 
-export type ActualizarAlumnoDTO = Omit<
-  Alumno,
-  'id' | 'fechaAlta'
->
 
 // GET /alumnos?page=1&limit=10&search=gomez&estado=activo
 export function getAlumnos(
@@ -41,13 +37,18 @@ export async function getAlumno(
   return response.data
 }
 
+// Datos que recibe el PUT: todos los del alumno, menos los que pone el servidor.
+export type ActualizarAlumnoDTO = Omit<Alumno, 'id' | 'fechaAlta'>
+
 // PUT /alumnos/:id
-export function actualizarAlumno(
-  id: number,
+export async function updateAlumno(
+  id: string,
   datos: ActualizarAlumnoDTO,
-): Promise<ItemResponse<Alumno>> {
-  return apiRequest<ItemResponse<Alumno>>(`/alumnos/${id}`, {
-    method: 'PUT',
-    body: datos,
-  })
+  signal?: AbortSignal,
+): Promise<Alumno> {
+  const response = await apiRequest<ItemResponse<Alumno>>(
+    `/alumnos/${encodeURIComponent(id)}`,
+    { method: 'PUT', body: datos, signal },
+  )
+  return response.data
 }
