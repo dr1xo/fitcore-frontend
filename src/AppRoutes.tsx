@@ -6,27 +6,32 @@ import { RequireSession } from './components/RequireSession'
 import { APP_ROUTES } from './config/routes'
 import { AlumnoDetallePage } from './pages/AlumnoDetallePage'
 import { AlumnosPage } from './pages/AlumnosPage'
+import { ClaseDetallePage } from './pages/ClaseDetallePage'
+import { ClasesPage } from './pages/ClasesPage'
 import { CuotaDetallePage } from './pages/CuotaDetallePage'
 import { CuotasPage } from './pages/CuotasPage'
 import { HomePage } from './pages/HomePage'
+import { HorariosPage } from './pages/HorariosPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { ProfesorDetallePage } from './pages/ProfesorDetallePage'
+import { ProfesoresPage } from './pages/ProfesoresPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SectionPage } from './pages/SectionPage'
-import { ProfesoresPage } from './pages/ProfesoresPage'
-import { ProfesorDetallePage } from './pages/ProfesorDetallePage'
-import { HorariosPage } from './pages/HorariosPage'
 
-// Rutas que tienen su propia pantalla; el resto usa la pantalla provisoria.
+// Rutas que tienen su propia pantalla.
 const CUSTOM_PATHS = [
   '/',
   '/gestion-alumnos',
   '/gestion-cuotas',
   '/profesores',
   '/horarios',
+  '/clases',
+  '/gestion-clases',
 ]
 
-// Login y registro quedan fuera del Layout; el resto de la aplicación pide sesión.
+// Login y registro quedan fuera del Layout.
+// El resto de la aplicación requiere sesión.
 export function AppRoutes() {
   return (
     <Routes>
@@ -34,9 +39,11 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
       </Route>
+
       <Route element={<RequireSession />}>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
+
           <Route
             path="/gestion-alumnos"
             element={
@@ -45,6 +52,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/gestion-alumnos/:id"
             element={
@@ -53,6 +61,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/gestion-cuotas"
             element={
@@ -61,6 +70,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/gestion-cuotas/:id"
             element={
@@ -69,6 +79,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/profesores"
             element={
@@ -77,6 +88,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/profesores/:id"
             element={
@@ -85,6 +97,7 @@ export function AppRoutes() {
               </ProfileGuard>
             }
           />
+
           <Route
             path="/horarios"
             element={
@@ -106,22 +119,59 @@ export function AppRoutes() {
             }
           />
 
-          {APP_ROUTES.filter((route) => !CUSTOM_PATHS.includes(route.path)).map(
-            (route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  <ProfileGuard profiles={route.profiles}>
-                    <SectionPage
-                      title={route.label}
-                      description={route.description}
-                    />
-                  </ProfileGuard>
-                }
-              />
-            ),
-          )}
+          <Route
+            path="/clases"
+            element={
+              <ProfileGuard profiles={['alumno']}>
+                <ClasesPage />
+              </ProfileGuard>
+            }
+          />
+
+          <Route
+            path="/clases/:id"
+            element={
+              <ProfileGuard profiles={['alumno']}>
+                <ClaseDetallePage />
+              </ProfileGuard>
+            }
+          />
+
+          <Route
+            path="/gestion-clases"
+            element={
+              <ProfileGuard profiles={['administracion']}>
+                <ClasesPage />
+              </ProfileGuard>
+            }
+          />
+
+          <Route
+            path="/gestion-clases/:id"
+            element={
+              <ProfileGuard profiles={['administracion']}>
+                <ClaseDetallePage />
+              </ProfileGuard>
+            }
+          />
+
+          {APP_ROUTES.filter(
+            (route) => !CUSTOM_PATHS.includes(route.path),
+          ).map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={
+                <ProfileGuard profiles={route.profiles}>
+                  <SectionPage
+                    title={route.label}
+                    description={route.description}
+                  />
+                </ProfileGuard>
+              }
+            />
+          ))}
+
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>

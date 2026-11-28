@@ -1,0 +1,109 @@
+.clases-toolbar {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 210px), 1fr)
+  );
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.clases-toolbar > * {
+  min-width: 0;
+}
+
+.clases-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.clases-detail-link {
+  color: inherit;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.clases-detail-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.clases-detail-link:focus-visible,
+.clases-action:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.clases-cupo {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clases-cupo--disponible {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.clases-cupo--completo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.clases-detail-toolbar {
+  margin-bottom: 1.5rem;
+}
+
+.clases-action {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.clases-page [role='status'] .clases-action {
+  margin: 0.75rem 0 1rem;
+}
+
+.clases-card {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+}
+
+.clases-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+}
+
+.clases-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 180px), 1fr)
+  );
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.clases-detail-grid dt {
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.clases-detail-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
